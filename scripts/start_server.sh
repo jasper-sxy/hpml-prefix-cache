@@ -9,7 +9,7 @@ BLOCKS=${2:-800}
 pkill -f "vllm serve" && sleep 3       # stop any old server (port/GPU memory)
 vllm serve $MODEL \
   --dtype bfloat16 --max-model-len 4096 \
-  --enable-prefix-caching \
+  --enable-prefix-caching --enable-prompt-tokens-details \
   --num-gpu-blocks-override $BLOCKS \
   --block-size 16 --max-num-seqs 64 --seed 0 \
   --port 8000

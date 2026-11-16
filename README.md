@@ -35,13 +35,15 @@ improves goodput over vLLM's native LRU eviction.
 - Run only one vLLM server per GPU. The experiment runner stops any running server first.
 
 ## Pipeline
-workload/build_doc_pool.py -> workload/data/<model>/docs_{dev,test}.jsonl WikiText-103 prefixes as token IDs
-workload/make_trace.py -> workload/traces/<model>/<trace>.jsonl Zipf popularity, Poisson arrivals,
-popularity drift, one-off bursts
-client/run_experiment.py configs/<exp>.yaml on the GPU server; per run:
-restart vLLM (empty cache) -> client/replay.py -> client/metrics.py -> client/plot_run.py
--> results/raw/<exp>/<label>rep<k><time>/ self-contained run directory
-client/upload_wandb.py results/raw/<exp> on any machine that reaches W&B
+```
+workload/build_doc_pool.py   -> workload/data/<model>/docs_{dev,test}.jsonl   WikiText-103 prefixes as token IDs
+workload/make_trace.py       -> workload/traces/<model>/<trace>.jsonl          Zipf popularity, Poisson arrivals,
+                                                                                popularity drift, one-off bursts
+client/run_experiment.py configs/<exp>.yaml                                    on the GPU server; per run:
+    restart vLLM (empty cache) -> client/replay.py -> client/metrics.py -> client/plot_run.py
+    -> results/raw/<exp>/<label>_rep<k>_<time>/                               self-contained run directory
+client/upload_wandb.py results/raw/<exp>                                       on any machine that reaches W&B
+```
 Generated data, traces, and raw results are not in git; they are reproducible from the scripts
 and seeds. The document pool for Qwen2.5-3B (seed 0, 100 dev + 100 test, 2048 tokens) has
 `token_digest` `0274c44d8d4065e1`.

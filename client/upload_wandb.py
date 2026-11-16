@@ -62,13 +62,13 @@ def upload(run_dir, project, entity, window):
     run = wandb.init(project=project, entity=entity, name=name, group=exp.get("experiment"),
                      job_type="replay", config=cfg, tags=tags, reinit=True)
     # server state over time, x axis = seconds since trace start
-    run.define_metric("server/t_s")
+    run.define_metric("server/t_s", hidden=True)  # x axis only; no panel of its own
     run.define_metric("server/*", step_metric="server/t_s")
     for row in load_jsonl(os.path.join(run_dir, "timeseries.jsonl")):
         run.log({f"server/{k}": v for k, v in row.items() if isinstance(v, (int, float))})
     # request hit rate per time window
     reqs = [r for r in load_jsonl(os.path.join(run_dir, "requests.jsonl")) if r.get("ok")]
-    run.define_metric("window/t_s")
+    run.define_metric("window/t_s", hidden=True)
     run.define_metric("window/*", step_metric="window/t_s")
     if reqs and all(r.get("cached_tokens") is not None for r in reqs):
         end, t = max(r["start_s"] for r in reqs), 0.0

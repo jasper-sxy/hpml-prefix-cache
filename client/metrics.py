@@ -14,6 +14,7 @@ Usage:
   python client/metrics.py results/raw/<run_dir> [more run dirs ...] --slo-ttft-ms 500 --slo-tpot-ms 50
 """
 import argparse
+import glob
 import json
 import os
 
@@ -44,6 +45,10 @@ def summarize(run_dir, slo_ttft, slo_tpot):
     if os.path.exists(os.path.join(run_dir, "run.json")):
         with open(os.path.join(run_dir, "run.json")) as f:
             run = json.load(f)
+    series = []
+    if os.path.exists(os.path.join(run_dir, "timeseries.jsonl")):
+        with open(os.path.join(run_dir, "timeseries.jsonl")) as f:
+            series = [json.loads(line) for line in f]
     ok = [r for r in reqs if r["ok"]]
     for r in ok:
         r["tpot_ms"] = tpot_ms(r)
@@ -67,6 +72,14 @@ def summarize(run_dir, slo_ttft, slo_tpot):
         "itl_ms": lat_stats([x for r in ok for x in r["itl_ms"]]),
         "token_hit_rate_server": run.get("prefix_cache_hit_rate"),  # from /metrics deltas
     }
+
+    # Server state over the run. Preemption = vLLM evicted a RUNNING request because the
+    # KV budget could not hold all active requests; it is a capacity problem, not eviction.
+    if series:
+        pre = [row["num_preemptions_total"] for row in series if "num_preemptions_total" in row]
+        s["preemptions"] = pre[-1] - pre[0] if pre else None
+        s["max_running"] = max((row.get("num_requests_running", 0) for row in series), default=None)
+        s["max_waiting"] = max((row.get("num_requests_waiting", 0) for row in series), default=None)
 
     if ok and all(r.get("cached_tokens") is not None for r in ok):
         hits = [r for r in ok if r["cached_tokens"] > 0]
@@ -96,8 +109,16 @@ def main():
     p.add_argument("--slo-tpot-ms", type=float, default=50.0, help="provisional until frozen in Phase 3")
     a = p.parse_args()
 
-    rows = []
+    # a path may be one run directory or a folder of runs (e.g. a whole experiment)
+    run_dirs = []
     for d in a.run_dirs:
+        if os.path.exists(os.path.join(d, "requests.jsonl")):
+            run_dirs.append(d)
+        else:
+            found = glob.glob(os.path.join(d, "**", "requests.jsonl"), recursive=True)
+            run_dirs += sorted(os.path.dirname(x) for x in found)
+    rows = []
+    for d in run_dirs:
         s = summarize(d, a.slo_ttft_ms, a.slo_tpot_ms)
         with open(os.path.join(d, "summary.json"), "w") as f:
             json.dump(s, f, indent=2)
@@ -105,14 +126,15 @@ def main():
     if len(rows) == 1:
         print(json.dumps(rows[0], indent=2))
         return
-    head = f"{'run':<44}{'n':>5}{'goodput':>9}{'SLO%':>7}{'TTFT50':>8}{'TTFT99':>8}{'TPOT50':>8}{'TPOT99':>8}{'hit%':>7}"
+    head = f"{'run':<44}{'n':>5}{'goodput':>9}{'SLO%':>7}{'TTFT50':>8}{'TTFT99':>8}{'TPOT50':>8}{'TPOT99':>8}{'hit%':>7}{'preempt':>8}"
     print(head)
     for s in rows:
         hit = s.get("request_hit_rate")
         print(f"{s['run'][-44:]:<44}{s['n_requests']:>5}{s['goodput_req_s']:>9.3f}"
               f"{100 * s['slo_attainment']:>7.1f}{s['ttft_ms']['p50']:>8.1f}{s['ttft_ms']['p99']:>8.1f}"
               f"{s['tpot_ms']['p50']:>8.1f}{s['tpot_ms']['p99']:>8.1f}"
-              f"{(100 * hit if hit is not None else float('nan')):>7.1f}")
+              f"{(100 * hit if hit is not None else float('nan')):>7.1f}"
+              f"{str(s.get('preemptions', '-')):>8}")
 
 
 if __name__ == "__main__":

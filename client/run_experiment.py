@@ -102,13 +102,26 @@ def wait_healthy(proc, port, timeout):
 
 
 def stop_server(proc):
-    if proc.poll() is None:
-        proc.send_signal(signal.SIGINT)
+    """Stop the server and every process it started (it runs in its own process group)."""
+    try:
+        pgid = os.getpgid(proc.pid)
+    except ProcessLookupError:
+        return
+    for sig, wait in ((signal.SIGINT, 60), (signal.SIGKILL, 10)):
         try:
-            proc.wait(timeout=60)
+            os.killpg(pgid, sig)
+        except ProcessLookupError:
+            return
+        try:
+            proc.wait(timeout=wait)
         except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
+            continue
+        time.sleep(2)  # main process is gone; remove any child it left behind
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        return
 
 
 def git_commit():
@@ -118,6 +131,30 @@ def git_commit():
                                capture_output=True, text=True).stdout.strip()
         return sha + ("-dirty" if dirty else "")
     except Exception:
+        return None
+
+
+def vllm_fork_commit():
+    """Commit of third_party/vllm (our fork); '-dirty' if it has uncommitted changes."""
+    repo = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "third_party", "vllm")
+    try:
+        sha = subprocess.run(["git", "-C", repo, "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(["git", "-C", repo, "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True).stdout.strip()
+        return (sha + ("-dirty" if dirty else "")) or None
+    except Exception:
+        return None
+
+
+def model_revision(model):
+    """Hugging Face commit of the cached model (refs/main in the HF cache)."""
+    root = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
+    ref = os.path.join(root, "hub", "models--" + model.replace("/", "--"), "refs", "main")
+    try:
+        with open(ref) as f:
+            return f.read().strip()
+    except OSError:
         return None
 
 
@@ -162,7 +199,8 @@ def run_one(exp_name, exp_dir, c, rep):
     info = {
         "experiment": exp_name, "label": c["label"], "repeat": rep, "run_dir": run_dir,
         "config": c, "server_cmd": cmd, "git_commit": git_commit(), "gpu": gpu_name(),
-        "versions": {"vllm": version("vllm"), "torch": version("torch")},
+        "versions": {"vllm": version("vllm"), "torch": version("torch"),
+                     "vllm_fork_commit": vllm_fork_commit(), "model_revision": model_revision(c["model"])},
         "started_at": time.strftime("%Y-%m-%d %H:%M:%S"), "status": "running",
     }
 
@@ -175,7 +213,8 @@ def run_one(exp_name, exp_dir, c, rep):
     stop_all_servers()
     print(f"\n=== {c['label']} rep{rep} -> {run_dir}\n    {' '.join(cmd)}", flush=True)
     log = open(os.path.join(run_dir, "server.log"), "w")
-    proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=server_env(c))
+    proc = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=server_env(c),
+                            start_new_session=True)  # own process group, see stop_server()
     try:
         err = wait_healthy(proc, c["port"], c["startup_timeout_s"])
         if err:

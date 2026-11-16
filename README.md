@@ -19,7 +19,7 @@ improves goodput over vLLM's native LRU eviction.
 | Item | Value |
 |---|---|
 | GPU | NVIDIA RTX 4080 SUPER 32 GB (AutoDL), driver 580 |
-| vLLM | 0.33.0 (commit 42d9d569) |
+| vLLM | 0.33.0 (tag `v0.33.0`, commit `4ba787e`), editable install of our fork, see below |
 | PyTorch | 2.14.0+cu130 |
 | Python | 3.12 (conda env `vllm`), plus matplotlib, pyyaml |
 | Model | Qwen/Qwen2.5-3B-Instruct (Llama-3.2-3B-Instruct pending access) |
@@ -33,6 +33,34 @@ improves goodput over vLLM's native LRU eviction.
 - W&B is not reachable from the AutoDL server (HTTP 403). Experiments save everything locally;
   `client/upload_wandb.py` uploads them from any machine that can reach W&B.
 - Run only one vLLM server per GPU. The experiment runner stops any running server first.
+- `bash: fork: Resource temporarily unavailable` means the container's process limit is full,
+  usually leftover processes from earlier vLLM servers. Restart the instance; the runner now
+  stops each server together with all of its child processes.
+
+## vLLM from our fork
+vLLM is our fork `jasper-sxy/vllm`, branch `prefix-evict` (created from tag `v0.33.0`, commit
+`4ba787e`), checked out as the submodule `third_party/vllm` and installed in editable mode: Python
+imports the source in `third_party/vllm/vllm`, so changes take effect when the server restarts.
+The compiled CUDA/Rust parts come from the official 0.33.0 wheel (no local compilation).
+The folder is `third_party/vllm` rather than `vllm` so that `import vllm` never picks up the
+repository folder itself.
+
+```bash
+git clone --recurse-submodules https://github.com/jasper-sxy/hpml-prefix-cache.git
+cd hpml-prefix-cache
+pip download vllm==0.33.0 --no-deps -d /path/to/wheels           # official wheel: compiled parts
+cd third_party/vllm
+python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['build-system']['requires'])"
+pip install setuptools-rust setuptools-scm cmake ninja jinja2 wheel  # build requirements except torch
+SETUPTOOLS_SCM_PRETEND_VERSION=0.33.0 VLLM_USE_PRECOMPILED=1 \
+VLLM_PRECOMPILED_WHEEL_LOCATION=$(ls /path/to/wheels/vllm-0.33.0-*.whl) \
+pip install -e . --no-deps --no-build-isolation
+python -c "import vllm.v1.core.block_pool as bp; print(bp.__file__)"   # -> .../third_party/vllm/vllm/...
+```
+Roll back to the plain release with
+`pip install --force-reinstall --no-deps /path/to/wheels/vllm-0.33.0-*.whl`.
+The experiment runner records the fork commit (with `-dirty` for uncommitted changes) and the model
+revision in each run's `experiment.json`.
 
 ## Pipeline
 ```
@@ -97,7 +125,8 @@ Findings:
   concurrent requests. Phase 3 must size the KV budget together with the load so that
   preemption does not hide the effect of eviction.
 - Runs are deterministic: the automated runner reproduced the manual runs' hit rates exactly
-  (0.4353 stable, 0.4286 drift).
+  (0.4353 stable, 0.4286 drift), and so did the editable install of our fork
+  (`configs/fork_check.yaml`: hit rate 0.4353, TTFT p50 93.8 ms vs. 92.9 ms).
 
 ## Repository layout
 | Path | Content | Phase |
@@ -110,7 +139,7 @@ Findings:
 | `eval/` | correctness and quality checks | 3, 7 |
 | `sim/` | offline eviction simulator | 5 |
 | `results/` | summary tables and figures (raw runs are not in git) | 3+ |
-| `vllm/` | our vLLM fork as a git submodule (to be added) | 4, 6 |
+| `third_party/vllm/` | our vLLM fork (submodule, branch `prefix-evict` from v0.33.0), installed editable | 4, 6 |
 
 ## W&B
 Project `hpml-prefix-cache` (personal workspace for now; pass `--entity <team>` to

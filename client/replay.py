@@ -6,6 +6,8 @@ timestamp (without waiting for earlier ones), streamed, and timed token by token
 Output (in --out-dir):
   requests.jsonl  one line per request: TTFT, end-to-end time, inter-token gaps, token counts
   run.json        run-level info: trace, model, wall time, prefix-cache hit rate, client lag
+  timeseries.jsonl  server state sampled every --sample-interval seconds: running/waiting
+                  requests, KV-cache usage, prefix-cache counters, preemptions, GPU util/memory
 
 Usage:
   python client/replay.py --trace workload/traces/<model>/<name>.jsonl --limit 40   # quick test
@@ -35,6 +37,49 @@ async def prefix_cache_counters(session, url):
         text = await r.text()
     return {"queries": read_metric(text, "vllm:prefix_cache_queries_total"),
             "hits": read_metric(text, "vllm:prefix_cache_hits_total")}
+
+
+# vLLM metric names (summed over label sets). Names differ a little between versions,
+# so every candidate is tried and missing ones are simply left out.
+SAMPLED = [
+    "vllm:num_requests_running", "vllm:num_requests_waiting",
+    "vllm:kv_cache_usage_perc", "vllm:gpu_cache_usage_perc",
+    "vllm:prefix_cache_queries_total", "vllm:prefix_cache_hits_total",
+    "vllm:num_preemptions_total",
+]
+
+
+async def gpu_stats():
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "nvidia-smi", "--query-gpu=utilization.gpu,memory.used",
+            "--format=csv,noheader,nounits", stdout=asyncio.subprocess.PIPE)
+        out, _ = await proc.communicate()
+        util, mem = out.decode().splitlines()[0].split(",")
+        return {"gpu_util_pct": float(util), "gpu_mem_mib": float(mem)}
+    except Exception:
+        return {}
+
+
+async def sampler(session, url, t0, interval, rows, stop):
+    while not stop.is_set():
+        tick = time.perf_counter()
+        row = {"t_s": round(tick - t0, 3)}
+        try:
+            async with session.get(url + "/metrics") as r:
+                text = await r.text()
+            for name in SAMPLED:
+                v = read_metric(text, name)
+                if v == v:  # skip NaN (metric not exported by this version)
+                    row[name.split(":", 1)[1]] = v
+        except Exception as e:
+            row["error"] = repr(e)
+        row.update(await gpu_stats())
+        rows.append(row)
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=max(0.0, interval - (time.perf_counter() - tick)))
+        except asyncio.TimeoutError:
+            pass
 
 
 async def one_request(session, url, model, rec, t0, results):
@@ -114,10 +159,18 @@ async def run(a):
         print(f"replaying {len(recs)} requests over {recs[-1]['t']:.0f}s -> {out_dir}")
         t0 = time.perf_counter() + 1.0  # one second head start to schedule everything
         prog = asyncio.create_task(progress(results, len(recs), t0))
+        series, stop = [], asyncio.Event()
+        samp = asyncio.create_task(sampler(s, a.url, t0, a.sample_interval, series, stop))
         await asyncio.gather(*(one_request(s, a.url, model, r, t0, results) for r in recs))
         prog.cancel()
         wall = time.perf_counter() - t0
+        stop.set()
+        await samp
         after = await prefix_cache_counters(s, a.url)
+
+    with open(os.path.join(out_dir, "timeseries.jsonl"), "w") as f:
+        for row in series:
+            f.write(json.dumps(row) + "\n")
 
     results.sort(key=lambda r: r["req_id"])
     with open(os.path.join(out_dir, "requests.jsonl"), "w") as f:
@@ -136,6 +189,7 @@ async def run(a):
         "ttft_ms_p50": round(float(np.percentile(ttft, 50)), 1),
         "ttft_ms_p99": round(float(np.percentile(ttft, 99)), 1),
         "send_lag_ms_p99": round(float(np.percentile(lag, 99)), 2),
+        "sampled_metrics": sorted({k for row in series for k in row} - {"t_s", "error"}),
     }
     with open(os.path.join(out_dir, "run.json"), "w") as f:
         json.dump(run_info, f, indent=2)
@@ -155,6 +209,7 @@ def main():
     p.add_argument("--limit", type=int, default=0, help="replay only the first N requests")
     p.add_argument("--out-dir", default=None)
     p.add_argument("--timeout", type=float, default=600, help="seconds without data before giving up")
+    p.add_argument("--sample-interval", type=float, default=1.0, help="seconds between server samples")
     asyncio.run(run(p.parse_args()))
 
 

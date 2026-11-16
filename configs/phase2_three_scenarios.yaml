@@ -1,0 +1,17 @@
+# Phase 2 end-to-end check: LRU (vLLM native) on the three scenarios, light load (2 req/s).
+name: phase2_three_scenarios
+defaults:
+  model: Qwen/Qwen2.5-3B-Instruct
+  num_gpu_blocks: 800        # 800 x 16 = 12,800 tokens = 12 prefixes of 1024 tokens
+  prefix_caching: true
+  policy: lru
+  repeats: 1
+  slo_ttft_ms: 500           # provisional; frozen in Phase 3
+  slo_tpot_ms: 50
+runs:
+  - label: stable
+    trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r2.0_T300_s0.jsonl
+  - label: drift
+    trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r2.0_T300_drift0.5_s0.jsonl
+  - label: burst
+    trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r2.0_T300_burst0.5x20_s0.jsonl

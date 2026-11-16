@@ -13,3 +13,4 @@ nohup.out
 # secrets
 .env
 .git-credentials
+workload/data/

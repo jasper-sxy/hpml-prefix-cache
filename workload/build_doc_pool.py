@@ -48,6 +48,8 @@ def main():
     p.add_argument("--max-len", type=int, default=2048, help="tokens kept per article")
     p.add_argument("--n-dev", type=int, default=100)
     p.add_argument("--n-test", type=int, default=100)
+    p.add_argument("--n-oneoff", type=int, default=0,
+                   help="extra documents for one-off traffic (half dev, half test)")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", default="workload/data")
     a = p.parse_args()
@@ -60,8 +62,8 @@ def main():
 
     rng = random.Random(a.seed)
     rng.shuffle(articles)
-    need = a.n_dev + a.n_test
-    pool = []
+    need = a.n_dev + a.n_test + a.n_oneoff
+    pool, seen_first_blocks = [], set()
     for title, text in articles:
         if len(text) < a.max_len * 3:  # cheap filter: clearly too short
             continue
@@ -69,6 +71,10 @@ def main():
         ids = tok(text, add_special_tokens=True)["input_ids"]
         if len(ids) < a.max_len:
             continue
+        first_block = tuple(ids[:16])  # one KV block; documents sharing it would share cache
+        if first_block in seen_first_blocks:
+            continue
+        seen_first_blocks.add(first_block)
         pool.append({"doc_id": len(pool), "title": title, "token_ids": ids[: a.max_len]})
         if len(pool) == need:
             break
@@ -76,13 +82,19 @@ def main():
 
     out_dir = os.path.join(a.out, a.model.replace("/", "__"))
     os.makedirs(out_dir, exist_ok=True)
-    for name, docs in (("dev", pool[: a.n_dev]), ("test", pool[a.n_dev:])):
+    n_main = a.n_dev + a.n_test
+    half = a.n_oneoff // 2
+    splits = [("dev", pool[: a.n_dev]), ("test", pool[a.n_dev:n_main])]
+    if a.n_oneoff:
+        splits += [("oneoff_dev", pool[n_main:n_main + half]), ("oneoff_test", pool[n_main + half:])]
+    for name, docs in splits:
         with open(os.path.join(out_dir, f"docs_{name}.jsonl"), "w") as f:
             for d in docs:
                 f.write(json.dumps(d, ensure_ascii=False) + "\n")
 
     first_blocks = {tuple(d["token_ids"][:16]) for d in pool}
-    digest = hashlib.sha256(json.dumps([d["token_ids"] for d in pool]).encode()).hexdigest()[:16]
+    # digest over dev + test only, so adding one-off documents keeps it unchanged
+    digest = hashlib.sha256(json.dumps([d["token_ids"] for d in pool[:n_main]]).encode()).hexdigest()[:16]
     meta = {
         "model": a.model,
         "dataset": "Salesforce/wikitext wikitext-103-raw-v1 (train split)",
@@ -90,7 +102,8 @@ def main():
         "seed": a.seed,
         "n_dev": a.n_dev,
         "n_test": a.n_test,
-        "distinct_first_blocks": len(first_blocks),  # should equal n_dev + n_test
+        "n_oneoff": a.n_oneoff,
+        "distinct_first_blocks": len(first_blocks),  # should equal n_dev + n_test + n_oneoff
         "token_digest": digest,  # same settings -> same digest on every machine
     }
     with open(os.path.join(out_dir, "meta.json"), "w") as f:

@@ -10,6 +10,7 @@ Usage:
   python workload/make_trace.py                                  # stable popularity
   python workload/make_trace.py --drift-at 0.5                   # re-rank halfway
   python workload/make_trace.py --burst-at 0.5 --burst-size 20   # one-off burst halfway
+  python workload/make_trace.py --oneoff-frac 0.3                # 30% of requests are one-off
 """
 import argparse
 import json
@@ -37,6 +38,8 @@ def main():
     p.add_argument("--burst-at", type=float, default=None, help="fraction of duration; one-off burst")
     p.add_argument("--burst-size", type=int, default=20, help="number of one-off documents")
     p.add_argument("--burst-window", type=float, default=5.0, help="seconds the burst is spread over")
+    p.add_argument("--oneoff-frac", type=float, default=0.0,
+                   help="fraction of arrivals that request a document never requested again")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out-dir", default="workload/traces")
     a = p.parse_args()
@@ -49,6 +52,13 @@ def main():
     assert a.n_docs + n_burst <= len(docs), "not enough documents in this split"
     assert all(len(d["token_ids"]) >= a.prefix_len for d in docs), "prefix-len longer than pool"
     regular, one_off = docs[: a.n_docs], docs[a.n_docs : a.n_docs + n_burst]
+    oneoff_pool = []
+    if a.oneoff_frac > 0:
+        path = f"workload/data/{slug}/docs_oneoff_{a.split}.jsonl"
+        assert os.path.exists(path), f"{path} missing: rebuild the pool with --n-oneoff"
+        with open(path) as f:
+            oneoff_pool = [json.loads(line) for line in f]
+    oneoff_iter = iter(oneoff_pool)
 
     rng = random.Random(a.seed)
     weights = [1.0 / (r ** a.alpha) for r in range(1, a.n_docs + 1)]  # Zipf over ranks 1..N
@@ -64,6 +74,11 @@ def main():
         t += rng.expovariate(a.rate)  # Poisson arrivals: exponential gaps
         if t >= a.duration:
             break
+        if a.oneoff_frac > 0 and rng.random() < a.oneoff_frac:
+            d = next(oneoff_iter, None)
+            assert d is not None, "not enough one-off documents: rebuild the pool with a larger --n-oneoff"
+            events.append((t, d, "oneoff"))
+            continue
         ranks, phase = (rank_before, "before") if t < drift_t else (rank_after, "after")
         r = rng.choices(range(a.n_docs), weights=weights)[0]
         events.append((t, regular[ranks[r]], phase))
@@ -80,6 +95,8 @@ def main():
         name += f"_drift{a.drift_at}"
     if n_burst:
         name += f"_burst{a.burst_at}x{n_burst}"
+    if a.oneoff_frac > 0:
+        name += f"_oneoff{a.oneoff_frac}"
     name += f"_s{a.seed}"
     out_dir = os.path.join(a.out_dir, slug)
     os.makedirs(out_dir, exist_ok=True)

@@ -9,7 +9,7 @@ Panels share the time axis (seconds since the trace started):
 Drift and burst times from the trace's .meta.json are marked on every panel.
 
 Usage:
-  python client/plot_run.py results/raw/<run_dir> [--window 15] [--slo-ttft-ms 500]
+  python client/plot_run.py results/raw/<run_dir> [--window 15] [--slo-ttft-ms 300]
 Writes <run_dir>/timeline.png
 """
 import argparse
@@ -62,7 +62,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("run_dir")
     p.add_argument("--window", type=float, default=15.0, help="seconds per hit-rate window")
-    p.add_argument("--slo-ttft-ms", type=float, default=500.0)
+    p.add_argument("--slo-ttft-ms", type=float, default=300.0)
     a = p.parse_args()
 
     reqs = [r for r in load_jsonl(os.path.join(a.run_dir, "requests.jsonl")) if r["ok"]]

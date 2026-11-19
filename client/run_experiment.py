@@ -40,8 +40,8 @@ DEFAULTS = {
     "port": 8000,
     "repeats": 1,
     "sample_interval": 1.0,
-    "slo_ttft_ms": 500.0,
-    "slo_tpot_ms": 50.0,
+    "slo_ttft_ms": 300.0,  # frozen in Phase 3.1: ~3x low-load, cache-off median TTFT
+    "slo_tpot_ms": 35.0,   # frozen in Phase 3.1: ~3x low-load, cache-off median TPOT
     "extra_server_args": [],
     "env": {},
     "startup_timeout_s": 900,

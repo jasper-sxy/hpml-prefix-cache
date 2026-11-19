@@ -12,3 +12,4 @@ used from Phase 6), `max_model_len`, `max_num_seqs`, `block_size`, `seed`, `port
 |---|---|
 | `phase2_three_scenarios.yaml` | native LRU on the stable, drift, and burst traces at 2 requests/s |
 | `fork_check.yaml` | stable trace after switching to the editable install of our fork (must match Phase 2) |
+| `phase3_calibration.yaml` | prefix caching off at 1 request/s, 3 repeats: SLO calibration |

@@ -92,6 +92,15 @@ python client/upload_wandb.py results/raw/phase2_three_scenarios
 Manual alternative: `bash scripts/start_server.sh` in one screen, then
 `python client/replay.py --trace <trace>` and `python client/metrics.py <run_dir>`.
 
+## Service-level objectives (frozen in Phase 3.1)
+A request meets the SLO when **TTFT <= 300 ms and TPOT <= 35 ms**; goodput counts only such
+requests. Both limits are about 3x the median latency with prefix caching off at low load
+(1 request/s, 3 runs, `configs/phase3_calibration.yaml`): TTFT p50 96.6 ms, TPOT p50 11.0 ms.
+At that load every request meets them (TTFT p99 about 202 ms, TPOT p99 14.3 ms), so misses at
+higher load come from queueing or preemption. Goodput is computed afterwards from the
+per-request records, so any run can be re-scored without re-running it. Phase 2 results used
+the provisional 500 ms / 50 ms.
+
 ## Results
 
 ### Phase 1: prefix-cache smoke test
@@ -127,6 +136,23 @@ Findings:
 - Runs are deterministic: the automated runner reproduced the manual runs' hit rates exactly
   (0.4353 stable, 0.4286 drift), and so did the editable install of our fork
   (`configs/fork_check.yaml`: hit rate 0.4353, TTFT p50 93.8 ms vs. 92.9 ms).
+
+### Phase 3.1: SLO calibration and measurement cross-check
+Prefix caching off, 800 KV blocks, 1 request/s for 300 s, 64 output tokens. Our client replays
+the WikiText trace (token-ID prompts, ~1,042 tokens); `vllm bench serve` sends 300 random
+1,040-token text prompts at the same rate.
+
+| Metric | Our client (3 runs) | vllm bench serve |
+|---|---|---|
+| TTFT p50 | 96.6-96.7 ms | 111.1 ms |
+| TTFT p99 | 201.6-204.5 ms | 173.3 ms |
+| TPOT p50 | 11.0 ms | 10.5 ms |
+| TPOT p99 | 14.3 ms | 14.2 ms |
+| Requests meeting SLO | 100% | 100% |
+
+The three runs agree within 0.1%. Per-token metrics agree with vLLM's own benchmark within 5%.
+Its median TTFT is 15% higher; it sends text that the server must tokenize first (random-token
+text may also re-tokenize to more than 1,040 tokens), while our client sends token IDs.
 
 ## Repository layout
 | Path | Content | Phase |

@@ -11,7 +11,7 @@ Definitions (same as vLLM's own benchmark):
   goodput  requests per second that met BOTH SLOs (failed requests count as not met)
 
 Usage:
-  python client/metrics.py results/raw/<run_dir> [more run dirs ...] --slo-ttft-ms 500 --slo-tpot-ms 50
+  python client/metrics.py results/raw/<run_dir> [more run dirs ...] --slo-ttft-ms 300 --slo-tpot-ms 35
 """
 import argparse
 import glob
@@ -105,8 +105,8 @@ def summarize(run_dir, slo_ttft, slo_tpot):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("run_dirs", nargs="+")
-    p.add_argument("--slo-ttft-ms", type=float, default=500.0, help="provisional until frozen in Phase 3")
-    p.add_argument("--slo-tpot-ms", type=float, default=50.0, help="provisional until frozen in Phase 3")
+    p.add_argument("--slo-ttft-ms", type=float, default=300.0, help="frozen in Phase 3.1")
+    p.add_argument("--slo-tpot-ms", type=float, default=35.0, help="frozen in Phase 3.1")
     a = p.parse_args()
 
     # a path may be one run directory or a folder of runs (e.g. a whole experiment)

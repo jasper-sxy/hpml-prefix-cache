@@ -1,0 +1,12 @@
+# Phase 3.1: SLO calibration. Prefix caching OFF, low load (1 req/s), 3 repeats.
+# SLOs are set from these medians and then frozen for all later experiments.
+name: phase3_calibration
+defaults:
+  model: Qwen/Qwen2.5-3B-Instruct
+  num_gpu_blocks: 800
+  prefix_caching: false
+  policy: lru
+  repeats: 3
+runs:
+  - label: nocache_r1
+    trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r1.0_T300_s0.jsonl

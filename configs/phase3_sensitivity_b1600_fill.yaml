@@ -1,0 +1,29 @@
+# Phase 3 batch D fill-in at 1600 blocks, native LRU: extend the rate range so every
+# sensitivity curve has a knee (prefix 2048: lower rates; alpha 1.2 / prefix 512: higher).
+name: phase3_sensitivity_b1600_fill
+defaults:
+  model: Qwen/Qwen2.5-3B-Instruct
+  num_gpu_blocks: 1600
+  prefix_caching: true
+  policy: lru
+runs:
+  - {label: stable_L2048_lru_r2, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r2.0_T300_s0.jsonl}
+  - {label: stable_L2048_lru_r3, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r3.0_T300_s0.jsonl}
+  - {label: stable_L2048_lru_r4, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r4.0_T300_s0.jsonl}
+  - {label: stable_L2048_lru_r5, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r5.0_T300_s0.jsonl}
+  - {label: oneoff30_L2048_lru_r2, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r2.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L2048_lru_r3, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r3.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L2048_lru_r4, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r4.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L2048_lru_r5, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L2048_a0.9_r5.0_T300_oneoff0.3_s0.jsonl}
+  - {label: stable_a1.2_lru_r18, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a1.2_r18.0_T300_s0.jsonl}
+  - {label: stable_a1.2_lru_r20, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a1.2_r20.0_T300_s0.jsonl}
+  - {label: stable_a1.2_lru_r24, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a1.2_r24.0_T300_s0.jsonl}
+  - {label: stable_L512_lru_r18, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r18.0_T300_s0.jsonl}
+  - {label: stable_L512_lru_r20, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r20.0_T300_s0.jsonl}
+  - {label: stable_L512_lru_r24, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r24.0_T300_s0.jsonl}
+  - {label: oneoff30_L512_lru_r14, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r14.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L512_lru_r16, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r16.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L512_lru_r18, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r18.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_L512_lru_r20, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L512_a0.9_r20.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_a1.2_lru_r14, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a1.2_r14.0_T300_oneoff0.3_s0.jsonl}
+  - {label: oneoff30_a1.2_lru_r16, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a1.2_r16.0_T300_oneoff0.3_s0.jsonl}

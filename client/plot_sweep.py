@@ -8,6 +8,8 @@ several budgets are plotted together.
 
 Usage:
   python client/plot_sweep.py results/raw/phase3_sweep_b800 [more experiment folders] [-o out.png]
+      [--only REGEX]   keep configurations whose name (label without _r<rate>) matches
+      [--title TEXT]
 """
 import argparse
 import glob
@@ -22,8 +24,16 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]  # fixed order
 INK, INK2, GRID, SURFACE = "#0b0b0b", "#52514e", "#e6e5e0", "#fcfcfb"
-NICE = {"stable_off": "Stable, caching off", "stable_lru": "Stable, LRU",
-        "oneoff30_lru": "30% one-off, LRU", "oneoff15_lru": "15% one-off, LRU"}
+# legend names; the order also sets the line order (and so the colors) within one plot
+NICE = {"stable_off": "Stable, caching off",
+        "stable_a0.6_lru": "Stable, alpha 0.6", "stable_L512_lru": "Stable, prefix 512",
+        "stable_lru": "Stable, LRU",
+        "stable_a1.2_lru": "Stable, alpha 1.2", "stable_L2048_lru": "Stable, prefix 2048",
+        "drift_lru": "Drift, LRU", "burst_lru": "Burst, LRU",
+        "oneoff30_a0.6_lru": "30% one-off, alpha 0.6", "oneoff30_L512_lru": "30% one-off, prefix 512",
+        "oneoff30_lru": "30% one-off, LRU",
+        "oneoff30_a1.2_lru": "30% one-off, alpha 1.2", "oneoff30_L2048_lru": "30% one-off, prefix 2048",
+        "driftoneoff30_lru": "Drift + 30% one-off, LRU", "oneoff15_lru": "15% one-off, LRU"}
 
 
 def load(path):
@@ -71,8 +81,12 @@ def main():
     p.add_argument("folders", nargs="+")
     p.add_argument("-o", "--out", default=None, help="default: <first folder>/sweep.png")
     p.add_argument("--slo-ttft-ms", type=float, default=300.0)
+    p.add_argument("--only", default=None, help="regex on the configuration name, e.g. 'a0.6|a1.2|^stable_lru$'")
+    p.add_argument("--title", default=None)
     a = p.parse_args()
     rows = collect(a.folders)
+    if a.only:
+        rows = [r for r in rows if re.search(a.only, r["base"])]
     assert rows, "no finished runs found"
     several_budgets = len({r["blocks"] for r in rows}) > 1
     keys = []
@@ -81,6 +95,12 @@ def main():
         k = (r["base"], r["blocks"])
         if k not in keys:
             keys.append(k)
+
+    # color = variant (alpha, prefix, drift, ...), line style = family (solid stable, dashed 30% one-off)
+    def variant(k):
+        v = re.sub(r"^(stable_|oneoff30_)", "", k[0]).replace("driftoneoff30_", "drift_")
+        return (v, k[1])
+    variants = list(dict.fromkeys(variant(k) for k in keys))
 
     def name(k):
         n = NICE.get(k[0], k[0])
@@ -96,7 +116,9 @@ def main():
         for i, k in enumerate(keys):
             pts = sorted((r["rate"], r[field]) for r in rows if (r["base"], r["blocks"]) == k and r[field] is not None)
             if pts:
-                ax.plot([x for x, _ in pts], [y for _, y in pts], color=PALETTE[i % len(PALETTE)],
+                ax.plot([x for x, _ in pts], [y for _, y in pts],
+                        color=PALETTE[variants.index(variant(k)) % len(PALETTE)],
+                        linestyle="--" if "oneoff" in k[0] else "-",
                         linewidth=2, marker="o", markersize=5, label=name(k))
         if field == "goodput":
             ax.plot([0, max_rate], [0, max_rate], color=INK2, linewidth=1, linestyle=":")
@@ -114,9 +136,13 @@ def main():
             ax.set_ylim(bottom=0)
         ax.set_xlim(0, max_rate * 1.05)
     handles, labels = axes.flat[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=min(3, len(labels)), frameon=False, fontsize=9,
-               labelcolor=INK2, bbox_to_anchor=(0.5, 0.995))
-    fig.tight_layout(rect=(0, 0, 1, 0.95 if len(labels) <= 3 else 0.91))
+    ncol = min(3, len(labels))
+    legend_rows = -(-len(labels) // ncol)
+    if a.title:
+        fig.text(0.5, 0.995, a.title, color=INK, fontsize=11, ha="center", va="top")
+    fig.legend(handles, labels, loc="upper center", ncol=ncol, frameon=False, fontsize=9,
+               labelcolor=INK2, bbox_to_anchor=(0.5, 0.97 if a.title else 0.995))
+    fig.tight_layout(rect=(0, 0, 1, 0.99 - 0.035 * legend_rows - (0.025 if a.title else 0)))
     out = a.out or os.path.join(a.folders[0], "sweep.png")
     fig.savefig(out, dpi=130, facecolor=SURFACE)
     print("wrote", out)

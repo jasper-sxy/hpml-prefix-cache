@@ -114,9 +114,9 @@ def main():
             ax.set_ylim(bottom=0)
         ax.set_xlim(0, max_rate * 1.05)
     handles, labels = axes.flat[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=len(labels), frameon=False, fontsize=9,
+    fig.legend(handles, labels, loc="upper center", ncol=min(3, len(labels)), frameon=False, fontsize=9,
                labelcolor=INK2, bbox_to_anchor=(0.5, 0.995))
-    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    fig.tight_layout(rect=(0, 0, 1, 0.95 if len(labels) <= 3 else 0.91))
     out = a.out or os.path.join(a.folders[0], "sweep.png")
     fig.savefig(out, dpi=130, facecolor=SURFACE)
     print("wrote", out)

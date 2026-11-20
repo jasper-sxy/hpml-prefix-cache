@@ -1,0 +1,25 @@
+# Phase 3 batch C at the primary budget (1600 blocks), native LRU, 1 run each.
+# Drift, short burst, drift + 30% one-off, at the same rates as the base sweeps.
+name: phase3_scenarios_b1600
+defaults:
+  model: Qwen/Qwen2.5-3B-Instruct
+  num_gpu_blocks: 1600
+  prefix_caching: true
+  policy: lru
+runs:
+  - {label: drift_lru_r6, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r6.0_T300_drift0.5_s0.jsonl}
+  - {label: drift_lru_r8, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r8.0_T300_drift0.5_s0.jsonl}
+  - {label: drift_lru_r10, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r10.0_T300_drift0.5_s0.jsonl}
+  - {label: drift_lru_r12, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r12.0_T300_drift0.5_s0.jsonl}
+  - {label: drift_lru_r14, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r14.0_T300_drift0.5_s0.jsonl}
+  - {label: drift_lru_r16, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r16.0_T300_drift0.5_s0.jsonl}
+  - {label: burst_lru_r6, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r6.0_T300_burst0.5x20_s0.jsonl}
+  - {label: burst_lru_r8, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r8.0_T300_burst0.5x20_s0.jsonl}
+  - {label: burst_lru_r10, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r10.0_T300_burst0.5x20_s0.jsonl}
+  - {label: burst_lru_r12, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r12.0_T300_burst0.5x20_s0.jsonl}
+  - {label: burst_lru_r14, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r14.0_T300_burst0.5x20_s0.jsonl}
+  - {label: burst_lru_r16, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r16.0_T300_burst0.5x20_s0.jsonl}
+  - {label: driftoneoff30_lru_r6, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r6.0_T300_drift0.5_oneoff0.3_s0.jsonl}
+  - {label: driftoneoff30_lru_r8, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r8.0_T300_drift0.5_oneoff0.3_s0.jsonl}
+  - {label: driftoneoff30_lru_r10, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r10.0_T300_drift0.5_oneoff0.3_s0.jsonl}
+  - {label: driftoneoff30_lru_r12, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r12.0_T300_drift0.5_oneoff0.3_s0.jsonl}

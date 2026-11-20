@@ -39,6 +39,17 @@ async def prefix_cache_counters(session, url):
             "hits": read_metric(text, "vllm:prefix_cache_hits_total")}
 
 
+async def save_metrics(session, url, path):
+    """Full /metrics page (Prometheus text), for profiling/server_breakdown.py."""
+    try:
+        async with session.get(url + "/metrics") as r:
+            text = await r.text()
+        with open(path, "w") as f:
+            f.write(text)
+    except Exception as e:  # profiling extra: never fail the run for it
+        print("could not save", path, repr(e))
+
+
 # vLLM metric names (summed over label sets). Names differ a little between versions,
 # so every candidate is tried and missing ones are simply left out.
 SAMPLED = [
@@ -155,6 +166,7 @@ async def run(a):
     # aiohttp ignores http_proxy unless trust_env=True, so localhost is reached directly
     async with aiohttp.ClientSession(timeout=timeout, connector=connector) as s:
         before = await prefix_cache_counters(s, a.url)
+        await save_metrics(s, a.url, os.path.join(out_dir, "metrics_before.prom"))
         results = []
         print(f"replaying {len(recs)} requests over {recs[-1]['t']:.0f}s -> {out_dir}")
         t0 = time.perf_counter() + 1.0  # one second head start to schedule everything
@@ -167,6 +179,7 @@ async def run(a):
         stop.set()
         await samp
         after = await prefix_cache_counters(s, a.url)
+        await save_metrics(s, a.url, os.path.join(out_dir, "metrics_after.prom"))
 
     with open(os.path.join(out_dir, "timeseries.jsonl"), "w") as f:
         for row in series:

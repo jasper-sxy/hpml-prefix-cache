@@ -1,0 +1,9 @@
+run                                    n   queue   q p99  prefill  pf p99  decode steps/s tok/step new-prompt%
+oneoff30_lru_r10_rep0_20261121-06   2990    29.2     665    103.5     298    1426    48.1    160.5        91.8
+oneoff30_lru_r8_rep0_20261121-063   2384     2.6     297     91.3     298    1135    59.5    103.6        91.8
+stable_lru_r12_rep0_20261121-0618   3554     4.1     299     77.6     298    1192    56.3    108.9        87.7
+stable_lru_r14_rep0_20261121-0624   4175    24.1     576     87.6     298    1389    48.2    148.2        87.6
+stable_lru_r2_rep0_20261121-06061    595     0.0     297     53.9     297     688    67.7     15.1        87.6
+stable_off_r2_rep0_20261121-06002    595     0.1     297     88.9     297     746    63.1     34.9        94.2
+stable_off_r6_rep0_20261121-06121   1753     0.9     297    108.3     298    1152    57.5    112.2        94.2
+times in ms, means unless marked p99; new-prompt% = share of computed tokens that are uncached prompt tokens (the rest are generated tokens)

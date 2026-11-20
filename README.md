@@ -8,7 +8,8 @@ improves goodput over vLLM's native LRU eviction.
 - [x] Phase 1: vLLM running with a capped KV cache; prefix-cache smoke test passed
 - [x] Phase 2: document pool, trace generator, replay client, metrics, server sampling,
       one-click runner, W&B upload
-- [ ] Phase 3: load sweep, SLO calibration, profiling, correctness baseline
+- [ ] Phase 3: SLO calibration (3.1), one-off traffic (3.2), load sweeps (3.3) and profiling (3.4)
+      done; correctness baseline (3.5) and team checkpoint (3.6) open
 - [ ] Phase 4: instrument vLLM's eviction path (block event log)
 - [ ] Phase 5: offline simulator and policy selection
 - [ ] Phase 6: implement the policy in vLLM, tests, overhead measurement
@@ -154,6 +155,76 @@ The three runs agree within 0.1%. Per-token metrics agree with vLLM's own benchm
 Its median TTFT is 15% higher; it sends text that the server must tokenize first (random-token
 text may also re-tokenize to more than 1,040 tokens), while our client sends token IDs.
 
+### Phase 3.2: continuous one-off traffic
+800 KV blocks, 2 requests/s, native LRU (`configs/phase3_oneoff_check.yaml`). With
+`--oneoff-frac f`, each arrival asks, with probability f, about a document that is never asked
+about again (2,000 dev one-off documents, same rate overall). One-off requests never hit, and
+they push regular prefixes out: the hit rate of regular requests drops from 43.5% (f = 0) to
+29.2% (f = 0.15) and 29.0% (f = 0.3). We use f = 0.3 as the main one-off scenario.
+
+### Phase 3.3: load sweeps with native LRU
+108 runs, one per point, dev documents, 300 s each. Main budget 1600 KV blocks (25,600 tokens,
+about 24 prefixes of 1,024 tokens); 800 blocks as the tight-memory case. Stable-family curves
+run at 6-16 requests/s, 30%-one-off curves at 6-12 (configs `phase3_sweep_*`,
+`phase3_scenarios_b1600`, `phase3_sensitivity_b1600*`; tables in `results/tables/phase3/`).
+"Busy" = highest rate where LRU still meets the SLO for at least 95% of requests; "near
+collapse" = the first rate below 95%. These are the proposed operating points for Phase 7.
+
+| Configuration (1600 blocks unless noted) | Request hit rate | Peak goodput (req/s @ rate) | Busy / near collapse (req/s) |
+|---|---|---|---|
+| caching off | 0 | 5.9 @ 8 | - |
+| stable | 56-58% | 12.8 @ 14 | 12 / 14 |
+| 30% one-off | 31-32% | 9.0 @ 10 | 8 / 10 |
+| drift (re-rank at 150 s) | 56-59% | 12.7 @ 14 | 12 / 14 |
+| burst (20 one-off docs at 150 s) | 55-58% | 12.2 @ 14 | 10 / 12 |
+| drift + 30% one-off | 31-32% | 9.0 @ 10 | 8 / 10 |
+| stable, alpha 0.6 | 40-41% | 9.6 @ 10 | 10 / 12 |
+| stable, alpha 1.2 | 73-75% | 18.6 @ 20 | 18 / 20 |
+| 30% one-off, alpha 0.6 | 21-22% | 7.6 @ 8 | 8 / 10 |
+| 30% one-off, alpha 1.2 | 44-45% | 10.5 @ 12 | 10 / 12 |
+| stable, prefix 512 | 72-75% | 24.0 @ 24 (no knee) | 24 / - |
+| 30% one-off, prefix 512 | 41-42% | 19.7 @ 20 (no knee) | 20 / - |
+| stable, prefix 2048 | 41-43% | 3.8 @ 5 | 2 / 3 |
+| 30% one-off, prefix 2048 | 20-23% | 2.9 @ 4 | - / 2 |
+| 800 blocks: caching off | 0 | 4.7 @ 6 | - |
+| 800 blocks: stable | 40-43% | 7.0 @ 8 | 6 / 8 |
+| 800 blocks: 30% one-off | 20-21% | 5.6 @ 6 | 4 / 6 |
+
+![KV budget](results/figures/phase3/budget.png)
+![Hit rate vs peak goodput](results/figures/phase3/hit_vs_goodput.png)
+
+More figures: [`scenarios_b1600.png`](results/figures/phase3/scenarios_b1600.png),
+[`alpha_b1600.png`](results/figures/phase3/alpha_b1600.png), [`prefix_b1600.png`](results/figures/phase3/prefix_b1600.png),
+timelines of drift and burst at 12 requests/s ([`timeline_drift_r12.png`](results/figures/phase3/timeline_drift_r12.png),
+[`timeline_burst_r12.png`](results/figures/phase3/timeline_burst_r12.png)).
+
+Findings:
+- Prefix caching more than doubles peak goodput at 1600 blocks (5.9 -> 12.8 req/s) and adds 49%
+  at 800 blocks (4.7 -> 7.0): more memory pays off mainly through more cached prefixes.
+- 30% one-off traffic cuts LRU's peak by 30% (12.8 -> 9.0); the hit rate of regular requests
+  falls from about 57% to about 45%. This is the loss a workload-aware policy can try to recover.
+- Drift does not hurt LRU: its hit rate is the same before and after the re-rank (56-59%),
+  because new hot documents are cached within seconds. Drift is therefore a guardrail for the
+  new policy, not a weakness of LRU. A 20-request burst costs 3-6% of goodput near the knee,
+  mostly through the extra prefill load (hits slow down as well), not through eviction.
+- For 1024-token prefixes at 1600 blocks, peak goodput rises monotonically with the hit rate;
+  goodput ~ 1 / (0.0142 + 0.155 (1 - h)) fits all seven configurations within 7%.
+- Prefix 512 shows no knee up to 24 (stable) and 20 (one-off) requests/s. Prefix 2048 reaches
+  the knee at 2-3 requests/s, partly because the TTFT SLO was calibrated with 1,024-token
+  prompts (a 2,048-token cold prefill alone is close to 300 ms); to be settled at checkpoint 3.6.
+
+### Phase 3.4: profiling
+Details, scripts and caveats: [`profiling/README.md`](profiling/README.md).
+- Request time (vLLM /metrics): a hit cuts the mean prefill from 89 to 54 ms at low load; near
+  the knee, SLO misses come mostly from queueing (queue p99 about 600 ms).
+- Cost of one engine step (Nsight Systems, 12 req/s): GPU time = 9.6 ms + 61.5 ms per 1,000
+  prefill tokens + 0.17 ms per decoding request (R^2 = 1.00); GEMMs are about 82% of kernel time,
+  attention about 13%.
+- Decode is memory-bound at about 87% of DRAM bandwidth, prefill compute-bound at 80-90% of the
+  BF16 peak: little is left to gain per token, so avoiding recomputation is the main lever.
+- At 12 req/s the GPU is busy about 98% of the time; the knee near 14 req/s is GPU throughput.
+  One prefix miss costs about 64 ms of GPU time, and every request decoding in that step waits.
+
 ## Repository layout
 | Path | Content | Phase |
 |---|---|---|
@@ -161,7 +232,7 @@ text may also re-tokenize to more than 1,040 tokens), while our client sends tok
 | `workload/` | document pool, question templates, trace generator | 2 |
 | `client/` | replay client, metrics, timeline plot, experiment runner, W&B uploader | 2 |
 | `configs/` | experiment configs (YAML) | 2+ |
-| `profiling/` | profiler scripts and summaries | 3 |
+| `profiling/` | profiling scripts and results ([README](profiling/README.md)) | 3 |
 | `eval/` | correctness and quality checks | 3, 7 |
 | `sim/` | offline eviction simulator | 5 |
 | `results/` | summary tables and figures (raw runs are not in git) | 3+ |

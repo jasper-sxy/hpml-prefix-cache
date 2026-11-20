@@ -2,10 +2,10 @@
 
 | File | Purpose |
 |---|---|
-| `build_doc_pool.py` | WikiText-103 articles -> first 2,048 token IDs per article; 100 dev + 100 test documents per model |
+| `build_doc_pool.py` | WikiText-103 articles -> first 2,048 token IDs per article; 100 dev + 100 test documents per model, plus a one-off pool (`--n-oneoff`, half dev, half test); every document has a distinct first block |
 | `questions.py` | five question templates appended after a document prefix |
 | `peek_prompt.py` | sanity check: sends one document with every question, checks token counts and prefix reuse |
-| `make_trace.py` | request trace: Zipf popularity, Poisson arrivals, popularity drift, one-off burst |
+| `make_trace.py` | request trace: Zipf popularity, Poisson arrivals, popularity drift, one-off burst, continuous one-off traffic (`--oneoff-frac`) |
 
 Generated, not in git: `data/<model>/` (document pools) and `traces/<model>/` (traces plus
 `.meta.json` with parameters and statistics such as the infinite-cache hit rate).

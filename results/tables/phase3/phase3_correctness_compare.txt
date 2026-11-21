@@ -1,0 +1,8 @@
+reference: ref_off_seq_a_rep0_20261121-095753 (400 prompts)
+run                                compared   same% hit same% miss same% 1st diff p50 diff<8 tok  prompts w/ >1 output
+lru_load_r12_rep0_20261121-103644      3554    61.3      62.2       60.0           32       7.8%               221/390
+lru_seq_rep0_20261121-101951            400    71.2      64.1      100.0           29       9.6%                 0/400
+off_load_r6_rep0_20261121-103046       1753    61.0         -       61.0           34       7.2%               148/353
+oneoff30_lru_r10_rep0_20261121-10      2115    60.3      60.3       60.3           29       8.2%              160/1235
+ref_off_seq_b_rep0_20261121-10085       400   100.0         -      100.0          nan       0.0%                 0/400
+same% = identical 64-token output; 1st diff = position of the first differing token among mismatches; last column = prompts that produced different outputs within the run

@@ -100,8 +100,9 @@ async def one_request(session, url, model, rec, t0, results):
     send = time.perf_counter()
     body = {"model": model, "prompt": rec["prompt_ids"], "max_tokens": rec["max_tokens"],
             "temperature": 0, "ignore_eos": True,  # fixed output length
-            "stream": True, "stream_options": {"include_usage": True}}
-    token_times, usage, err = [], None, None
+            "stream": True, "stream_options": {"include_usage": True},
+            "return_token_ids": True}  # generated token IDs, for eval/compare_outputs.py
+    token_times, usage, err, out_ids = [], None, None, []
     try:
         async with session.post(url + "/v1/completions", json=body) as r:
             if r.status != 200:
@@ -117,6 +118,7 @@ async def one_request(session, url, model, rec, t0, results):
                     msg = json.loads(data)
                     if msg.get("choices"):
                         token_times.append(time.perf_counter())
+                        out_ids.extend(msg["choices"][0].get("token_ids") or [])
                     if msg.get("usage"):
                         usage = msg["usage"]
     except Exception as e:  # keep going; the failure is recorded
@@ -136,6 +138,7 @@ async def one_request(session, url, model, rec, t0, results):
         "prompt_tokens": (usage or {}).get("prompt_tokens"),
         "completion_tokens": (usage or {}).get("completion_tokens"),
         "cached_tokens": details.get("cached_tokens"),  # only if the server reports it
+        "output_ids": out_ids,  # generated token IDs (empty if the server does not return them)
     })
 
 

@@ -1,0 +1,15 @@
+# Phase 3.5 correctness baseline at 1600 blocks (temperature 0, 64 output tokens).
+# Reference = caching off, one request at a time; the other runs are compared to it with
+# eval/compare_outputs.py. Phase 6 repeats the load runs with the new policy.
+name: phase3_correctness
+defaults:
+  model: Qwen/Qwen2.5-3B-Instruct
+  num_gpu_blocks: 1600
+  policy: lru
+runs:
+  - {label: ref_off_seq_a, prefix_caching: false, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/unique_L1024_n400_sp1.5.jsonl}
+  - {label: ref_off_seq_b, prefix_caching: false, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/unique_L1024_n400_sp1.5.jsonl}
+  - {label: lru_seq, prefix_caching: true, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/unique_L1024_n400_sp1.5.jsonl}
+  - {label: off_load_r6, prefix_caching: false, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r6.0_T300_s0.jsonl}
+  - {label: lru_load_r12, prefix_caching: true, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r12.0_T300_s0.jsonl}
+  - {label: oneoff30_lru_r10, prefix_caching: true, trace: workload/traces/Qwen__Qwen2.5-3B-Instruct/L1024_a0.9_r10.0_T300_oneoff0.3_s0.jsonl}

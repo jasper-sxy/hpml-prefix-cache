@@ -1,0 +1,6 @@
+reference: qa_off_seq_rep0_20261121-110720 (50 prompts)
+run                                compared   same% hit same% miss same% 1st diff p50 diff<8 tok  prompts w/ >1 output
+qa_lru_mix_r12_rep0_20261121-1117       200    31.0      38.7       29.6           21       2.2%               271/440
+qa_lru_seq_rep0_20261121-110933          50    54.0      42.5      100.0           25       4.3%                  0/50
+qa_off_mix_r6_rep0_20261121-11114       200    27.5         -       27.5           23       2.8%               195/403
+same% = identical 64-token output; 1st diff = position of the first differing token among mismatches; last column = prompts that produced different outputs within the run

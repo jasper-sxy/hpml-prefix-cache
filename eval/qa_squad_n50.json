@@ -1,0 +1,538 @@
+{
+ "source": "SQuAD v1.1 validation (rajpurkar/squad)",
+ "prefix_len": 1024,
+ "suffix": "\n\nQuestion: {q} Answer with a few words from the article.\nAnswer:",
+ "items": [
+  {
+   "doc_id": 10000,
+   "qid": 0,
+   "title": "Super_Bowl_50",
+   "squad_id": "56d602631c85041400946eda",
+   "question": "Who headlined the halftime show for Super Bowl 50?",
+   "answers": [
+    "Coldplay"
+   ]
+  },
+  {
+   "doc_id": 10000,
+   "qid": 1,
+   "title": "Super_Bowl_50",
+   "squad_id": "56be53b8acb8001400a50316",
+   "question": "In what year did Roger Goodell call Super Bowl 50 'an important game for us as a league'?",
+   "answers": [
+    "2012"
+   ]
+  },
+  {
+   "doc_id": 10000,
+   "qid": 2,
+   "title": "Super_Bowl_50",
+   "squad_id": "56bea9923aeaaa14008c91bb",
+   "question": "What day was the Super Bowl played on?",
+   "answers": [
+    "February 7",
+    "February 7, 2016"
+   ]
+  },
+  {
+   "doc_id": 10000,
+   "qid": 3,
+   "title": "Super_Bowl_50",
+   "squad_id": "56bf17653aeaaa14008c9514",
+   "question": "What was the number of solo tackles that Von Miller had in Super Bowl 50?",
+   "answers": [
+    "5",
+    "five"
+   ]
+  },
+  {
+   "doc_id": 10000,
+   "qid": 4,
+   "title": "Super_Bowl_50",
+   "squad_id": "56d98db6dc89441400fdb554",
+   "question": "What is the name of the stadium where Super Bowl 50 was played?",
+   "answers": [
+    "Levi's Stadium",
+    "Levi's Stadium."
+   ]
+  },
+  {
+   "doc_id": 10001,
+   "qid": 0,
+   "title": "Warsaw",
+   "squad_id": "57337ea24776f41900660bd3",
+   "question": "How many of Warsaw's inhabitants spoke Polish in 1933?",
+   "answers": [
+    "833,500"
+   ]
+  },
+  {
+   "doc_id": 10001,
+   "qid": 1,
+   "title": "Warsaw",
+   "squad_id": "57337ddc4776f41900660bbd",
+   "question": "How many lakes are there in Warsaw?",
+   "answers": [
+    "several"
+   ]
+  },
+  {
+   "doc_id": 10001,
+   "qid": 2,
+   "title": "Warsaw",
+   "squad_id": "57336755d058e614000b5a40",
+   "question": "What park covers an area of 76 ha.?",
+   "answers": [
+    "Łazienki",
+    "Łazienki Park"
+   ]
+  },
+  {
+   "doc_id": 10001,
+   "qid": 3,
+   "title": "Warsaw",
+   "squad_id": "57337ea24776f41900660bd4",
+   "question": "What is most of Warsaw's modern growth based on?",
+   "answers": [
+    "internal migration and urbanisation",
+    "internal migration and urbanisation.",
+    "migration and urbanisation"
+   ]
+  },
+  {
+   "doc_id": 10001,
+   "qid": 4,
+   "title": "Warsaw",
+   "squad_id": "57336755d058e614000b5a3d",
+   "question": "Over how many species of trees can be found in the Saxon Garden?",
+   "answers": [
+    "100",
+    "over 100"
+   ]
+  },
+  {
+   "doc_id": 10002,
+   "qid": 0,
+   "title": "Normans",
+   "squad_id": "56dddf4066d3e219004dad60",
+   "question": "Who ruled the duchy of Normandy",
+   "answers": [
+    "Richard I"
+   ]
+  },
+  {
+   "doc_id": 10002,
+   "qid": 1,
+   "title": "Normans",
+   "squad_id": "56dde0379a695914005b9636",
+   "question": "What is the original meaning of the word Norman?",
+   "answers": [
+    "Norseman, Viking",
+    "Viking"
+   ]
+  },
+  {
+   "doc_id": 10002,
+   "qid": 2,
+   "title": "Normans",
+   "squad_id": "56ddde6b9a695914005b962a",
+   "question": "From which countries did the Norse originate?",
+   "answers": [
+    "Denmark, Iceland and Norway"
+   ]
+  },
+  {
+   "doc_id": 10002,
+   "qid": 3,
+   "title": "Normans",
+   "squad_id": "56ddde6b9a695914005b962c",
+   "question": "What century did the Normans first gain their separate identity?",
+   "answers": [
+    "10th",
+    "10th century",
+    "the first half of the 10th century"
+   ]
+  },
+  {
+   "doc_id": 10002,
+   "qid": 4,
+   "title": "Normans",
+   "squad_id": "56dde1d966d3e219004dad8d",
+   "question": "Who upon arriving gave the original viking settlers a common identity?",
+   "answers": [
+    "Rollo"
+   ]
+  },
+  {
+   "doc_id": 10003,
+   "qid": 0,
+   "title": "Nikola_Tesla",
+   "squad_id": "56e0b9d57aa994140058e6c1",
+   "question": "When did Tesla come to the US?",
+   "answers": [
+    "1884"
+   ]
+  },
+  {
+   "doc_id": 10003,
+   "qid": 1,
+   "title": "Nikola_Tesla",
+   "squad_id": "56dfa13d4a1a83140091ebc3",
+   "question": "What was special about Tesla's memory?",
+   "answers": [
+    "eidetic"
+   ]
+  },
+  {
+   "doc_id": 10003,
+   "qid": 2,
+   "title": "Nikola_Tesla",
+   "squad_id": "56e0c2bc231d4119001ac38a",
+   "question": "When did Tesla go to Tomingaj?",
+   "answers": [
+    "1874",
+    "In 1874"
+   ]
+  },
+  {
+   "doc_id": 10003,
+   "qid": 3,
+   "title": "Nikola_Tesla",
+   "squad_id": "56dfa01738dc42170015211e",
+   "question": "Were Tesla's experiments high-voltage or low-voltage?",
+   "answers": [
+    "high-voltage"
+   ]
+  },
+  {
+   "doc_id": 10003,
+   "qid": 4,
+   "title": "Nikola_Tesla",
+   "squad_id": "56dfa1d44a1a83140091ebd7",
+   "question": "In what year did Tesla's family move to Gospic?",
+   "answers": [
+    "1862"
+   ]
+  },
+  {
+   "doc_id": 10004,
+   "qid": 0,
+   "title": "Computational_complexity_theory",
+   "squad_id": "56e17644e3433e1400422f42",
+   "question": "What field of computer science analyzes all possible algorithms in aggregate to determine the resource requirements needed to solve to a given problem?  ",
+   "answers": [
+    "computational complexity theory"
+   ]
+  },
+  {
+   "doc_id": 10004,
+   "qid": 1,
+   "title": "Computational_complexity_theory",
+   "squad_id": "56e16839cd28a01900c67889",
+   "question": "What are two basic primary resources used to guage complexity?",
+   "answers": [
+    "time and storage"
+   ]
+  },
+  {
+   "doc_id": 10004,
+   "qid": 2,
+   "title": "Computational_complexity_theory",
+   "squad_id": "56e190bce3433e1400422fc9",
+   "question": "What are the two simple word responses to a decision problem?",
+   "answers": [
+    "yes or no"
+   ]
+  },
+  {
+   "doc_id": 10004,
+   "qid": 3,
+   "title": "Computational_complexity_theory",
+   "squad_id": "56e19724cd28a01900c679f9",
+   "question": "In addition to the traveling salesman problem, what is another example of a function problem?",
+   "answers": [
+    "integer factorization",
+    "integer factorization problem",
+    "the integer factorization problem"
+   ]
+  },
+  {
+   "doc_id": 10004,
+   "qid": 4,
+   "title": "Computational_complexity_theory",
+   "squad_id": "56e190bce3433e1400422fca",
+   "question": "What are the two integer responses to a decision problem?",
+   "answers": [
+    "1 or 0"
+   ]
+  },
+  {
+   "doc_id": 10005,
+   "qid": 0,
+   "title": "Teacher",
+   "squad_id": "56e74e4800c9c71400d76f78",
+   "question": "Who would a teacher's college be protecting?",
+   "answers": [
+    "public",
+    "public interest",
+    "the public"
+   ]
+  },
+  {
+   "doc_id": 10005,
+   "qid": 1,
+   "title": "Teacher",
+   "squad_id": "56e74bf937bdd419002c3e36",
+   "question": "In addition to teaching within the family, where else is informal teaching done?",
+   "answers": [
+    "in the wider community",
+    "the wider community",
+    "wider community"
+   ]
+  },
+  {
+   "doc_id": 10005,
+   "qid": 2,
+   "title": "Teacher",
+   "squad_id": "56e751fb00c9c71400d76fa8",
+   "question": "What is another way of learning that is not formal?",
+   "answers": [
+    "informal"
+   ]
+  },
+  {
+   "doc_id": 10005,
+   "qid": 3,
+   "title": "Teacher",
+   "squad_id": "56e751fb00c9c71400d76fa9",
+   "question": "What is a name for the different ways to instruct students?",
+   "answers": [
+    "pedagogy"
+   ]
+  },
+  {
+   "doc_id": 10005,
+   "qid": 4,
+   "title": "Teacher",
+   "squad_id": "56e749dd00c9c71400d76f55",
+   "question": "What would a community member need to teach informally?",
+   "answers": [
+    "anyone with knowledge or skills",
+    "knowledge or skills"
+   ]
+  },
+  {
+   "doc_id": 10006,
+   "qid": 0,
+   "title": "Martin_Luther",
+   "squad_id": "56f7cdc2a6d7ea1400e17290",
+   "question": "Of what region was Saxony a part?",
+   "answers": [
+    "Holy Roman Empire",
+    "Holy Roman Empire."
+   ]
+  },
+  {
+   "doc_id": 10006,
+   "qid": 1,
+   "title": "Martin_Luther",
+   "squad_id": "56f7cdc2a6d7ea1400e1728e",
+   "question": "When was Martin Luther born?",
+   "answers": [
+    "10 November 1483"
+   ]
+  },
+  {
+   "doc_id": 10006,
+   "qid": 2,
+   "title": "Martin_Luther",
+   "squad_id": "56f7cb10a6d7ea1400e17288",
+   "question": "What did Martin Luther's marriage allow?",
+   "answers": [
+    "Protestant clergy to marry",
+    "Protestant clergy to marry.",
+    "clerical marriage"
+   ]
+  },
+  {
+   "doc_id": 10006,
+   "qid": 3,
+   "title": "Martin_Luther",
+   "squad_id": "56f7eba8a6d7ea1400e172cf",
+   "question": "What fields of study did Martin Luther prefer?",
+   "answers": [
+    "theology and philosophy"
+   ]
+  },
+  {
+   "doc_id": 10006,
+   "qid": 4,
+   "title": "Martin_Luther",
+   "squad_id": "56f7cdc2a6d7ea1400e1728f",
+   "question": "Where was Luther born?",
+   "answers": [
+    "Eisleben, Saxony"
+   ]
+  },
+  {
+   "doc_id": 10007,
+   "qid": 0,
+   "title": "Southern_California",
+   "squad_id": "5705e4fe75f01819005e7705",
+   "question": "What is the name of the desert on the border of Arizona?",
+   "answers": [
+    "Colorado Desert",
+    "the Colorado Desert"
+   ]
+  },
+  {
+   "doc_id": 10007,
+   "qid": 1,
+   "title": "Southern_California",
+   "squad_id": "5705e26d75f01819005e76d7",
+   "question": "What are the ties that best described what the \"eight counties\" are based on?",
+   "answers": [
+    "demographics and economic",
+    "demographics and economic ties",
+    "economic"
+   ]
+  },
+  {
+   "doc_id": 10007,
+   "qid": 2,
+   "title": "Southern_California",
+   "squad_id": "5705ec1675f01819005e776f",
+   "question": "What is the name of the professional skateboarder that lives in southern California?",
+   "answers": [
+    "Tony Hawk"
+   ]
+  },
+  {
+   "doc_id": 10007,
+   "qid": 3,
+   "title": "Southern_California",
+   "squad_id": "5705e26d75f01819005e76d4",
+   "question": "What is Southern California often abbreviated as?",
+   "answers": [
+    "SoCal"
+   ]
+  },
+  {
+   "doc_id": 10007,
+   "qid": 4,
+   "title": "Southern_California",
+   "squad_id": "5705e33f52bb89140068964c",
+   "question": "What is the name of the region that is not defined by the eight or 10 county definitions?",
+   "answers": [
+    "Southern California Megaregion",
+    "the greater Southern California Megaregion"
+   ]
+  },
+  {
+   "doc_id": 10008,
+   "qid": 0,
+   "title": "Sky_(United_Kingdom)",
+   "squad_id": "57094d489928a8140047150e",
+   "question": "What is the name brand of the personal video recorder that BSkyB offers?",
+   "answers": [
+    "PVR",
+    "Sky+"
+   ]
+  },
+  {
+   "doc_id": 10008,
+   "qid": 1,
+   "title": "Sky_(United_Kingdom)",
+   "squad_id": "570953a7efce8f15003a7e01",
+   "question": "What additional srevice did BSkyB offer besides HD channels that they claimed offered \"substantially more value\"?",
+   "answers": [
+    "HD channels and Video On Demand",
+    "Video On Demand",
+    "Video On Demand content"
+   ]
+  },
+  {
+   "doc_id": 10008,
+   "qid": 2,
+   "title": "Sky_(United_Kingdom)",
+   "squad_id": "57094b4f9928a814004714f9",
+   "question": "What channel replaced Sky Travel?",
+   "answers": [
+    "Sky Three"
+   ]
+  },
+  {
+   "doc_id": 10008,
+   "qid": 3,
+   "title": "Sky_(United_Kingdom)",
+   "squad_id": "57094d489928a8140047150d",
+   "question": "Who has design authority over all of the digital satellite receivers that are capable of using their service?",
+   "answers": [
+    "BSkyB"
+   ]
+  },
+  {
+   "doc_id": 10008,
+   "qid": 4,
+   "title": "Sky_(United_Kingdom)",
+   "squad_id": "570953a7efce8f15003a7dfe",
+   "question": "What year did BSkyB and Virgin Media have a dispute over the carriage of Sky Channels on cable TV?",
+   "answers": [
+    "2007"
+   ]
+  },
+  {
+   "doc_id": 10009,
+   "qid": 0,
+   "title": "Victoria_(Australia)",
+   "squad_id": "570d29c2b3d812140066d4be",
+   "question": "How many Victorians are Catholic?",
+   "answers": [
+    "26.7%"
+   ]
+  },
+  {
+   "doc_id": 10009,
+   "qid": 1,
+   "title": "Victoria_(Australia)",
+   "squad_id": "570d29c2b3d812140066d4bd",
+   "question": "What percentage of Victorians are Christian?",
+   "answers": [
+    "61.1%"
+   ]
+  },
+  {
+   "doc_id": 10009,
+   "qid": 2,
+   "title": "Victoria_(Australia)",
+   "squad_id": "570d2417fed7b91900d45c3d",
+   "question": "What kind of economy does Victoria have?",
+   "answers": [
+    "diversified",
+    "highly diversified"
+   ]
+  },
+  {
+   "doc_id": 10009,
+   "qid": 3,
+   "title": "Victoria_(Australia)",
+   "squad_id": "570d28bdb3d812140066d4a7",
+   "question": "What party is favored in Bedigo and Geelong?",
+   "answers": [
+    "Australian Labor Party",
+    "Labor"
+   ]
+  },
+  {
+   "doc_id": 10009,
+   "qid": 4,
+   "title": "Victoria_(Australia)",
+   "squad_id": "570d28bdb3d812140066d4a3",
+   "question": "What political party is strongest in Melbourne's working class suburbs?",
+   "answers": [
+    "Australian Labor Party",
+    "Labor"
+   ]
+  }
+ ]
+}

@@ -8,8 +8,8 @@ improves goodput over vLLM's native LRU eviction.
 - [x] Phase 1: vLLM running with a capped KV cache; prefix-cache smoke test passed
 - [x] Phase 2: document pool, trace generator, replay client, metrics, server sampling,
       one-click runner, W&B upload
-- [ ] Phase 3: SLO calibration (3.1), one-off traffic (3.2), load sweeps (3.3) and profiling (3.4)
-      done; correctness baseline (3.5) and team checkpoint (3.6) open
+- [ ] Phase 3: SLO calibration (3.1), one-off traffic (3.2), load sweeps (3.3), profiling (3.4) and
+      correctness baseline (3.5) done; team checkpoint (3.6) open
 - [ ] Phase 4: instrument vLLM's eviction path (block event log)
 - [ ] Phase 5: offline simulator and policy selection
 - [ ] Phase 6: implement the policy in vLLM, tests, overhead measurement
@@ -224,6 +224,29 @@ Details, scripts and caveats: [`profiling/README.md`](profiling/README.md).
   BF16 peak: little is left to gain per token, so avoiding recomputation is the main lever.
 - At 12 req/s the GPU is busy about 98% of the time; the knee near 14 req/s is GPU throughput.
   One prefix miss costs about 64 ms of GPU time, and every request decoding in that step waits.
+
+### Phase 3.5: correctness and quality
+Temperature 0, 64 output tokens, 1600 blocks (`configs/phase3_correctness.yaml`,
+`configs/phase3_qa.yaml`; details in [`eval/README.md`](eval/README.md)). Reference: caching
+off, one request at a time. `client/replay.py` now records every run's generated token IDs.
+
+| Condition | Outputs identical to the reference | SQuAD accuracy (50 questions) |
+|---|---|---|
+| caching off, one at a time, run again | 100% | 78.0% |
+| LRU, one at a time | 64% of hits, 100% of misses | 78.0% |
+| caching off, 6 req/s | 61% | 78.0% (200 requests) |
+| LRU, stable, 12 req/s | 61% (hits 62%, misses 60%) | 77.5% (200 requests) |
+| LRU, 30% one-off, 10 req/s | 60% | - |
+
+- The reference is exactly reproducible. Reusing cached KV and batching with other requests each
+  change about 4 in 10 outputs, almost always as a different but plausible continuation after
+  20-35 identical tokens (a near-tie between the top two tokens flips under a slightly different
+  floating-point order); about 3% of requests diverge within the first 8 tokens.
+- Under load, batching dominates: hits and misses match the reference equally often.
+- QA accuracy is unchanged in every condition: the wording changes, the answers do not.
+- Phase 6 criteria for the new policy, on the same traces: identical share not below LRU's (61%,
+  about +-1 point), no more early divergences, SQuAD accuracy about 78%; unit tests of the block
+  pool remain the main correctness check.
 
 ## Repository layout
 | Path | Content | Phase |

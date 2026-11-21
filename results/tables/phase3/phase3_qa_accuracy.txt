@@ -1,0 +1,6 @@
+run                                  QA requests  accuracy     hit acc (n)    miss acc (n)
+qa_lru_mix_r12_rep0_20261121-111746          200     77.5%       83.9 (31)      76.3 (169)
+qa_lru_seq_rep0_20261121-110933               50     78.0%       75.0 (40)       90.0 (10)
+qa_off_mix_r6_rep0_20261121-111145           200     78.0%               -      78.0 (200)
+qa_off_seq_rep0_20261121-110720               50     78.0%               -       78.0 (50)
+correct = a gold answer appears in the first non-empty line of the output (SQuAD normalization)
